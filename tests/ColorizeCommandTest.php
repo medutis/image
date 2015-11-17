@@ -3,18 +3,12 @@
 use Intervention\Image\Gd\Commands\ColorizeCommand as ColorizeGd;
 use Intervention\Image\Imagick\Commands\ColorizeCommand as ColorizeImagick;
 
-class ColorizeCommandTest extends PHPUnit_Framework_TestCase
+class ColorizeCommandTest extends CommandTestCase
 {
-    public function tearDown()
-    {
-        Mockery::close();
-    }
-    
     public function testGd()
     {
-        $resource = imagecreatefromjpeg(__DIR__.'/images/test.jpg');
-        $image = Mockery::mock('Intervention\Image\Image');
-        $image->shouldReceive('getCore')->once()->andReturn($resource);
+        $image = $this->getTestImage('gd');
+
         $command = new ColorizeGd(array(20, 0, -40));
         $result = $command->execute($image);
         $this->assertTrue($result);
@@ -22,13 +16,12 @@ class ColorizeCommandTest extends PHPUnit_Framework_TestCase
 
     public function testImagick()
     {
-        $imagick = Mockery::mock('Imagick');
-        $imagick->shouldReceive('getquantumrange')->with()->once()->andReturn(array('quantumRangeLong' => 42));
-        $imagick->shouldReceive('levelimage')->with(0, 4, 42, \Imagick::CHANNEL_RED)->once()->andReturn(true);
-        $imagick->shouldReceive('levelimage')->with(0, 1, 42, \Imagick::CHANNEL_GREEN)->once()->andReturn(true);
-        $imagick->shouldReceive('levelimage')->with(0, 0.6, 42, \Imagick::CHANNEL_BLUE)->once()->andReturn(true);
-        $image = Mockery::mock('Intervention\Image\Image');
-        $image->shouldReceive('getCore')->times(4)->andReturn($imagick);
+        $image = $this->getTestImage('imagick');
+        $image->getCore()->shouldReceive('getquantumrange')->times(3)->with()->andReturn(array('quantumRangeLong' => 42));
+        $image->getCore()->shouldReceive('levelimage')->times(3)->with(0, 4, 42, \Imagick::CHANNEL_RED)->andReturn(true);
+        $image->getCore()->shouldReceive('levelimage')->times(3)->with(0, 1, 42, \Imagick::CHANNEL_GREEN)->andReturn(true);
+        $image->getCore()->shouldReceive('levelimage')->times(3)->with(0, 0.6, 42, \Imagick::CHANNEL_BLUE)->andReturn(true);
+        
         $command = new ColorizeImagick(array(20, 0, -40));
         $result = $command->execute($image);
         $this->assertTrue($result);

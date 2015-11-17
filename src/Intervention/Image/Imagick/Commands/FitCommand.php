@@ -24,17 +24,20 @@ class FitCommand extends \Intervention\Image\Commands\AbstractCommand
         $resized = clone $cropped;
         $resized = $resized->resize($width, $height, $constraints);
 
-        // crop image
-        $image->getCore()->cropImage(
-            $cropped->width,
-            $cropped->height,
-            $cropped->pivot->x,
-            $cropped->pivot->y
-        );
+        foreach ($image as $frame) {
 
-        // resize image
-        $image->getCore()->scaleImage($resized->getWidth(), $resized->getHeight());
-        $image->getCore()->setImagePage(0,0,0,0);
+            // crop image
+            $frame->getCore()->cropImage(
+                $cropped->width,
+                $cropped->height,
+                $cropped->pivot->x,
+                $cropped->pivot->y
+            );
+
+            // resize image
+            $frame->getCore()->scaleImage($resized->getWidth(), $resized->getHeight());
+            $frame->getCore()->setImagePage(0,0,0,0);
+        }
 
         return true;
     }

@@ -14,7 +14,7 @@ class Driver extends \Intervention\Image\AbstractDriver
      */
     public function __construct(Decoder $decoder = null, Encoder $encoder = null)
     {
-        if ( ! $this->coreAvailable()) {
+        if ( ! $this->moduleAvailable()) {
             throw new \Intervention\Image\Exception\NotSupportedException(
                 "ImageMagick module not available with this PHP installation."
             );
@@ -44,7 +44,7 @@ class Driver extends \Intervention\Image\AbstractDriver
         $core->setColorspace(\Imagick::COLORSPACE_UNDEFINED);
 
         // build image
-        $image = new \Intervention\Image\Image(new self, $core);
+        $image = new \Intervention\Image\Image(new self, new Container($core));
 
         return $image;
     }
@@ -61,11 +61,11 @@ class Driver extends \Intervention\Image\AbstractDriver
     }
 
     /**
-     * Checks if core module installation is available
+     * Checks if image module installation is available
      *
      * @return boolean
      */
-    protected function coreAvailable()
+    protected function moduleAvailable()
     {
         return (extension_loaded('imagick') && class_exists('Imagick'));
     }

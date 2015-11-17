@@ -20,7 +20,9 @@ class ResizeCommand extends \Intervention\Image\Commands\AbstractCommand
         $resized = $image->getSize()->resize($width, $height, $constraints);
 
         // modify image
-        $image->getCore()->scaleImage($resized->getWidth(), $resized->getHeight());
+        foreach ($image as $frame) {
+            $frame->getCore()->scaleImage($resized->getWidth(), $resized->getHeight());
+        }
 
         return true;
     }

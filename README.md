@@ -6,7 +6,7 @@ Intervention Image is a **PHP image handling and manipulation** library providin
 
 ## Requirements
 
-- PHP >=5.4
+- PHP >=5.3
 - Fileinfo Extension
 
 ## Supported Image Libraries

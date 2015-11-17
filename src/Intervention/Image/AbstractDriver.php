@@ -37,20 +37,20 @@ abstract class AbstractDriver
     abstract public function parseColor($value);
 
     /**
-     * Checks if core module installation is available
+     * Checks if image module installation is available
      *
      * @return boolean
      */
-    abstract protected function coreAvailable();
+    abstract protected function moduleAvailable();
 
     /**
-     * Returns clone of given core
+     * Returns clone of given container
      *
      * @return mixed
      */
-    public function cloneCore($core)
+    public function cloneContainer(ContainerInterface $container)
     {
-        return clone $core;
+        return clone $container;
     }
 
     /**

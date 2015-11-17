@@ -2,14 +2,11 @@
 
 namespace Intervention\Image;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
-
 /**
  * @method \Intervention\Image\Image backup(string $name = 'default')                                                                                                     Backups current image state as fallback for reset method under an optional name. Overwrites older state on every call, unless a different name is passed.
  * @method \Intervention\Image\Image blur(integer $amount = 1)                                                                                                            Apply a gaussian blur filter with a optional amount on the current image. Use values between 0 and 100.
  * @method \Intervention\Image\Image brightness(integer $level)                                                                                                           Changes the brightness of the current image by the given level. Use values between -100 for min. brightness. 0 for no change and +100 for max. brightness.
- * @method \Intervention\Image\Image cache(\Closure $callback, integer $lifetime = null, boolean $returnObj = false)                                                              Method to create a new cached image instance from a Closure callback. Pass a lifetime in minutes for the callback and decide whether you want to get an Intervention Image instance as return value or just receive the image stream.
+ * @method \Intervention\Image\Image cache(\Closure $callback, integer $lifetime = null, boolean $returnObj)                                                              Method to create a new cached image instance from a Closure callback. Pass a lifetime in minutes for the callback and decide whether you want to get an Intervention Image instance as return value or just receive the image stream.
  * @method \Intervention\Image\Image canvas(integer $width, integer $height, mixed $bgcolor = null)                                                                       Factory method to create a new empty image instance with given width and height. You can define a background-color optionally. By default the canvas background is transparent.
  * @method \Intervention\Image\Image circle(integer $radius, integer $x, integer $y, \Closure $callback = null)                                                           Draw a circle at given x, y, coordinates with given radius. You can define the appearance of the circle by an optional closure callback.
  * @method \Intervention\Image\Image colorize(integer $red, integer $green, integer $blue)                                                                                Change the RGB color values of the current image on the given channels red, green and blue. The input values are normalized so you have to include parameters from 100 for maximum color value. 0 for no change and -100 to take out all the certain color on the image.
@@ -48,10 +45,8 @@ use Psr\Http\Message\StreamInterface;
  * @method \Intervention\Image\Image text(string $text, integer $x = 0, integer $y = 0, \Closure $callback = null)                                                        Write a text string to the current image at an optional x,y basepoint position. You can define more details like font-size, font-file and alignment via a callback as the fourth parameter.
  * @method \Intervention\Image\Image trim(string $base = 'top-left', array $away = array('top', 'bottom', 'left', 'right'), integer $tolerance = 0, integer $feather = 0) Trim away image space in given color. Define an optional base to pick a color at a certain position and borders that should be trimmed away. You can also set an optional tolerance level, to trim similar colors and add a feathering border around the trimed image.
  * @method \Intervention\Image\Image widen(integer $width, \Closure $callback = null)                                                                                     Resizes the current image to new width, constraining aspect ratio. Pass an optional Closure callback as third parameter, to apply additional constraints like preventing possible upsizing.
- * @method StreamInterface           stream(string $format = null, integer $quality = 90)                                                                                 Build PSR-7 compatible StreamInterface with current image in given format and quality.
- * @method ResponseInterface         psrResponse(string $format = null, integer $quality = 90)                                                                            Build PSR-7 compatible ResponseInterface with current image in given format and quality.
  */
-class Image extends File
+class Image extends File implements \IteratorAggregate
 {
     /**
      * Instance of current image driver
@@ -61,11 +56,11 @@ class Image extends File
     protected $driver;
 
     /**
-     * Image resource/object of current image processor
+     * Container object of resources/objects of current image processor
      *
      * @var mixed
      */
-    protected $core;
+    protected $container;
 
     /**
      * Array of Image resource backups of current image processor
@@ -84,13 +79,13 @@ class Image extends File
     /**
      * Creates a new Image instance
      *
-     * @param AbstractDriver $driver
-     * @param mixed  $core
+     * @param AbstractDriver      $driver
+     * @param ContainerInterface  $container
      */
-    public function __construct(AbstractDriver $driver = null, $core = null)
+    public function __construct(AbstractDriver $driver = null, ContainerInterface $container = null)
     {
         $this->driver = $driver;
-        $this->core = $core;
+        $this->container = $container;
     }
 
     /**
@@ -105,6 +100,16 @@ class Image extends File
     {
         $command = $this->driver->executeCommand($this, $name, $arguments);
         return $command->hasOutput() ? $command->getOutput() : $this;
+    }
+
+    /**
+     * Returns Iterator
+     *
+     * @return \Intervention\Image\ContainerInterface
+     */
+    public function getIterator()
+    {
+        return $this->getContainer();
     }
 
     /**
@@ -186,11 +191,12 @@ class Image extends File
     /**
      * Returns current image resource/obj
      *
+     * @param integer $index
      * @return mixed
      */
-    public function getCore()
+    public function getCore($index = null)
     {
-        return $this->core;
+        return $this->container->getCore($index);
     }
 
     /**
@@ -200,7 +206,29 @@ class Image extends File
      */
     public function setCore($core)
     {
-        $this->core = $core;
+        $this->container->setCore($core);
+
+        return $this;
+    }
+
+    /**
+     * Returns current image container
+     *
+     * @return \Intervention\Image\ContainerInterface
+     */
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
+    /**
+     * Set current image container
+     *
+     * @param mixed $core
+     */
+    public function setContainer(ContainerInterface $container)
+    {
+        $this->container = $container;
 
         return $this;
     }
@@ -262,13 +290,23 @@ class Image extends File
     }
 
     /**
+     * Determines if current image has multiple animation frames
+     *
+     * @return boolean
+     */
+    public function isAnimated()
+    {
+        return ($this->container->countFrames() > 1);
+    }
+
+    /**
      * Checks if current image is already encoded
      *
      * @return boolean
      */
     public function isEncoded()
     {
-        return ! empty($this->encoded);
+        return ! is_null($this->encoded);
     }
 
     /**
@@ -372,6 +410,6 @@ class Image extends File
      */
     public function __clone()
     {
-        $this->core = $this->driver->cloneCore($this->core);
+        $this->container = $this->driver->cloneContainer($this->container);
     }
 }

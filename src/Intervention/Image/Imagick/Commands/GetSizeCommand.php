@@ -14,12 +14,11 @@ class GetSizeCommand extends \Intervention\Image\Commands\AbstractCommand
      */
     public function execute($image)
     {
-        /** @var \Imagick $core */
-        $core = $image->getCore();
+        $info = $image->getCore()->identifyImage();
 
         $this->setOutput(new Size(
-            $core->getImageWidth(),
-            $core->getImageHeight()
+            $info['geometry']['width'],
+            $info['geometry']['height']
         ));
 
         return true;

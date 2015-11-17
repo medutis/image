@@ -3,18 +3,12 @@
 use Intervention\Image\Gd\Commands\BlurCommand as BlurGd;
 use Intervention\Image\Imagick\Commands\BlurCommand as BlurImagick;
 
-class BlurCommandTest extends PHPUnit_Framework_TestCase
+class BlurCommandTest extends CommandTestCase
 {
-    public function tearDown()
-    {
-        Mockery::close();
-    }
-    
     public function testGd()
     {
-        $resource = imagecreatefromjpeg(__DIR__.'/images/test.jpg');
-        $image = Mockery::mock('Intervention\Image\Image');
-        $image->shouldReceive('getCore')->times(2)->andReturn($resource);
+        $image = $this->getTestImage('gd');
+
         $command = new BlurGd(array(2));
         $result = $command->execute($image);
         $this->assertTrue($result);
@@ -22,10 +16,9 @@ class BlurCommandTest extends PHPUnit_Framework_TestCase
 
     public function testImagick()
     {
-        $imagick = Mockery::mock('Imagick');
-        $imagick->shouldReceive('blurimage')->with(2, 1)->andReturn(true);
-        $image = Mockery::mock('Intervention\Image\Image');
-        $image->shouldReceive('getCore')->once()->andReturn($imagick);
+        $image = $this->getTestImage('imagick');
+        $image->getCore()->shouldReceive('blurimage')->with(2, 1)->times(3)->andReturn(true);
+
         $command = new BlurImagick(array(2));
         $result = $command->execute($image);
         $this->assertTrue($result);
